@@ -1963,6 +1963,9 @@ status_t CameraService::checkIfDeviceIsUsable(const std::string& cameraId) const
 bool isPrivilegedClient(const std::string &packageName) {
     std::vector<std::string> privilegedClientList = android::base::Split(
             android::base::GetProperty("persist.vendor.camera.privapp.list", ""), ",");
+    if (std::find(privilegedClientList.begin(), privilegedClientList.end(), "*") != privilegedClientList.end()) {
+        return true;
+    }
     auto it = std::find(privilegedClientList.begin(), privilegedClientList.end(),
             packageName);
     return it != privilegedClientList.end();

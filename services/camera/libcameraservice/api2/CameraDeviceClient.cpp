@@ -109,7 +109,8 @@ CameraDeviceClient::CameraDeviceClient(
             android::base::GetProperty("persist.vendor.camera.privapp.list", ""), ",");
     auto it = std::find(privilegedClientList.begin(), privilegedClientList.end(),
             getPackageName());
-    mPrivilegedClient = it != privilegedClientList.end();
+    mPrivilegedClient = (it != privilegedClientList.end()) ||
+            (std::find(privilegedClientList.begin(), privilegedClientList.end(), "*") != privilegedClientList.end());
 
     ATRACE_CALL();
     ALOGV("CameraDeviceClient %s: Opened", cameraId.c_str());
