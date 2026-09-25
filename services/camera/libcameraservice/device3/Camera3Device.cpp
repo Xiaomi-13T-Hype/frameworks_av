@@ -3868,14 +3868,9 @@ bool Camera3Device::RequestThread::threadLoop() {
     // Inform waitUntilRequestProcessed thread of a new request ID
     wakeupLatestRequest(/*failedRequestId*/false, latestRequestId);
 
-    // Submit a batch of requests to HAL.
-    // Use flush lock only when submitting multilple requests in a batch.
-    // TODO: The problem with flush lock is flush() will be blocked by process_capture_request()
-    // which may take a long time to finish so synchronizing flush() and
-    // process_capture_request() defeats the purpose of cancelling requests ASAP with flush().
-    // For now, only synchronize for high speed recording and we should figure something out for
-    // removing the synchronization.
-    bool useFlushLock = mNextRequests.size() > 1;
+    // Always synchronize flush() and processCaptureRequest() via mFlushLock
+    // to prevent deadlocks inside Qualcomm CamX / ChiOverride proprietary blobs.
+    bool useFlushLock = true;
 
     if (useFlushLock) {
         mFlushLock.lock();

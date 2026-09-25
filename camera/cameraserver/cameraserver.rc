@@ -7,4 +7,5 @@ service cameraserver /system/bin/cameraserver
     rlimit rtprio 10 10
     capabilities SYS_NICE
     onrestart class_restart cameraWatchdog
+    onrestart restart vendor.camera-provider-2-4
     interface aidl android.frameworks.cameraservice.service.ICameraService/default
