@@ -52,19 +52,12 @@ bool CameraServiceWatchdog::threadLoop()
                         getpid(), currentThreadId, mClientPid);
                 mCameraServiceProxyWrapper->notifyWatchdog(mClientPid, mIsNativePid);
             } else if (mTidMap[currentThreadId].cycles >= mMaxCycles) {
-                std::string abortMessage = getAbortMessage(mTidMap[currentThreadId].functionName);
-                android_set_abort_message(abortMessage.c_str());
-                ALOGW("CameraServiceWatchdog triggering abort for pid: %d tid: %d", getpid(),
-                        currentThreadId);
+                ALOGW("CameraServiceWatchdog timed out during %s for pid: %d tid: %d (bypassing abort to prevent HAL corruption)",
+                        mTidMap[currentThreadId].functionName.c_str(), getpid(), currentThreadId);
                 mCameraServiceProxyWrapper->logClose(mCameraId, 0 /*latencyMs*/,
                         true /*deviceError*/);
-                // We use abort here so we can get a tombstone for better
-                // debugging.
-                for (pid_t pid : mProviderPids) {
-                    kill(pid, SIGABRT);
-                }
-
-                abort();
+                // Do not kill provider or abort cameraserver - resetting counter to avoid busy loop
+                mTidMap[currentThreadId].cycles = 0;
             }
         }
     }

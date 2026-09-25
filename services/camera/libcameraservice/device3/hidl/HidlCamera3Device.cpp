@@ -42,8 +42,6 @@
 
 #include <utility>
 #include <chrono>
-#include <future>
-#include <thread>
 
 #include <utils/Log.h>
 #include <utils/Trace.h>
@@ -1450,20 +1448,7 @@ status_t HidlCamera3Device::HidlHalInterface::flush() {
     if (!valid()) return INVALID_OPERATION;
     status_t res = OK;
 
-    sp<device::V3_2::ICameraDeviceSession> session = mHidlSession;
-    std::promise<hardware::Return<hardware::camera::common::V1_0::Status>> flushPromise;
-    auto flushFuture = flushPromise.get_future();
-
-    std::thread([session, p = std::move(flushPromise)]() mutable {
-        p.set_value(session->flush());
-    }).detach();
-
-    if (flushFuture.wait_for(std::chrono::milliseconds(2000)) == std::future_status::timeout) {
-        ALOGW("%s: HAL flush timed out after 2000ms! Bypassing deadlock.", __FUNCTION__);
-        return TIMED_OUT;
-    }
-
-    auto err = flushFuture.get();
+    auto err = mHidlSession->flush();
     if (!err.isOk()) {
         ALOGE("%s: Transaction error: %s", __FUNCTION__, err.description().c_str());
         res = DEAD_OBJECT;
@@ -1494,20 +1479,7 @@ status_t HidlCamera3Device::HidlHalInterface::close() {
     if (!valid()) return INVALID_OPERATION;
     status_t res = OK;
 
-    sp<device::V3_2::ICameraDeviceSession> session = mHidlSession;
-    std::promise<hardware::Return<void>> closePromise;
-    auto closeFuture = closePromise.get_future();
-
-    std::thread([session, p = std::move(closePromise)]() mutable {
-        p.set_value(session->close());
-    }).detach();
-
-    if (closeFuture.wait_for(std::chrono::milliseconds(2000)) == std::future_status::timeout) {
-        ALOGW("%s: HAL close timed out after 2000ms! Bypassing deadlock.", __FUNCTION__);
-        return TIMED_OUT;
-    }
-
-    auto err = closeFuture.get();
+    auto err = mHidlSession->close();
     // Interface will be dead shortly anyway, so don't log errors
     if (!err.isOk()) {
         res = DEAD_OBJECT;

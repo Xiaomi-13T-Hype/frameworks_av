@@ -96,11 +96,11 @@ public:
         API_2 = 2
     };
 
-    // 3 second busy timeout when other clients are connecting
-    static const nsecs_t DEFAULT_CONNECT_TIMEOUT_NS = 3000000000;
+    // 6 second busy timeout when other clients are connecting
+    static const nsecs_t DEFAULT_CONNECT_TIMEOUT_NS = 6000000000;
 
-    // 1 second busy timeout when other clients are disconnecting
-    static const nsecs_t DEFAULT_DISCONNECT_TIMEOUT_NS = 1000000000;
+    // 5 second busy timeout when other clients are disconnecting
+    static const nsecs_t DEFAULT_DISCONNECT_TIMEOUT_NS = 5000000000;
 
     // Default number of messages to store in eviction log
     static const size_t DEFAULT_EVENT_LOG_LENGTH = 100;
@@ -1587,8 +1587,8 @@ private:
     // Current camera mute mode
     bool mOverrideCameraMuteMode = false;
 
-    // Camera Service watchdog flag
-    bool mCameraServiceWatchdogEnabled = true;
+    // Camera Service watchdog flag (disabled to prevent killing cameraserver during HAL multi-camera flush)
+    bool mCameraServiceWatchdogEnabled = false;
 
     // Current stream use case overrides
     std::vector<int64_t> mStreamUseCaseOverrides;
