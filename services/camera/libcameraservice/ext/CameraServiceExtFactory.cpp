@@ -9,12 +9,14 @@ void* CameraServiceExtFactory::sExtObject = nullptr;
 int (*CameraServiceExtFactory::sOnTransactFunc)(void*, uint32_t, const Parcel&, Parcel*, uint32_t) = nullptr;
 
 void CameraServiceExtFactory::ensureLoaded() {
-    if (sFunctionTable != nullptr) return;
+    static bool sLoadAttempted = false;
+    if (sLoadAttempted || sFunctionTable != nullptr) return;
+    sLoadAttempted = true;
 
     const char* libPath = "system_ext/lib64/libcsextimpl.so";
     void* handle = dlopen(libPath, RTLD_NOW);
     if (handle == nullptr) {
-        ALOGE("CameraServiceExtFactory: dlopen failed: %s", dlerror());
+        ALOGD("CameraServiceExtFactory: dlopen failed (optional extension): %s", dlerror());
         return;
     }
     ALOGI("CameraServiceExtFactory: dlopen succeeded, handle=%p", handle);
@@ -74,7 +76,7 @@ int CameraServiceExtFactory::onTransact(uint32_t code, const Parcel& data, Parce
     ensureLoaded();
     if (sExtObject == nullptr) {
         if (sFunctionTable == nullptr) {
-            ALOGE("CameraServiceExtFactory::onTransact: extension not loaded");
+            ALOGV("CameraServiceExtFactory::onTransact: extension not loaded");
             return -1;
         }
         void* actualFunc = *(void**)sFunctionTable;
